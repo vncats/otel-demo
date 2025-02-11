@@ -1,0 +1,41 @@
+file_format: "0.3"
+
+resource:
+  detectors:
+    attributes:
+      included:
+        - process.*
+      excluded:
+        - process.command_args
+  schema_url: https://opentelemetry.io/schemas/1.16.0
+
+propagators:
+  composite: [tracecontext, baggage]
+
+tracer_provider:
+  processors:
+    - batch:
+        exporter:
+          otlp:
+            protocol: grpc
+            endpoint: http://localhost:4317
+        export_timeout: 5000
+
+meter_provider:
+  readers:
+    - periodic:
+        exporter:
+          otlp:
+            protocol: grpc
+            endpoint: http://localhost:4317
+        collection_interval: 5s
+
+logger_provider:
+  processors:
+    - batch:
+        exporter:
+          console: {}
+        export_timeout: 5
+
+extra_config:
+  baggage: ["user_id", "ip"]
