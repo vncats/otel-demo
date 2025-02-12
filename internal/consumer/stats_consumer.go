@@ -3,11 +3,12 @@ package consumer
 import (
 	"context"
 	"encoding/json"
-	"github.com/cenkalti/backoff/v4"
 	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/vncats/otel-demo/internal/store"
 	"github.com/vncats/otel-demo/pkg/kafka"
+	"github.com/vncats/otel-demo/pkg/retry"
 	"math"
+	"time"
 )
 
 type StatsConsumer struct {
@@ -25,7 +26,12 @@ func NewStatsConsumer(st store.IStore) (*StatsConsumer, error) {
 			Offset:  kafka.OffsetEarliest,
 		},
 		kafka.WithMessageHandler(
-			kafka.HandleWithBackOff(handler.handleMessage, &backoff.StopBackOff{}),
+			kafka.HandleWithRetry(handler.handleMessage, retry.Config{
+				InitialInterval: 5 * time.Second,
+				MaxInterval:     30 * time.Second,
+				Multiplier:      2,
+				MaxRetries:      5,
+			}),
 		),
 	)
 	if err != nil {

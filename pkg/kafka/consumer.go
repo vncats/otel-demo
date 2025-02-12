@@ -3,9 +3,9 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/cenkalti/backoff/v4"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/vncats/otel-demo/pkg/otel/log"
+	"github.com/vncats/otel-demo/pkg/retry"
 	"sync"
 )
 
@@ -143,17 +143,11 @@ func (c *Consumer) handleEvent(ev kafka.Event) {
 	}
 }
 
-func HandleWithBackOff[T kafka.Event](fn func(T) error, bo backoff.BackOff) func(T) error {
-	if bo == nil {
-		return fn
-	}
+func HandleWithRetry[T kafka.Event](fn func(T) error, cfg retry.Config) func(T) error {
 	return func(t T) error {
-		op := func() error { return fn(t) }
-		err := backoff.Retry(op, bo)
-		if err != nil {
-			log.Error(context.Background(), "give up to handle message", err)
-		}
-		return err
+		return retry.Do(func() error {
+			return fn(t)
+		}, cfg)
 	}
 }
 
