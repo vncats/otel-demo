@@ -3,9 +3,15 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/vncats/otel-demo/pkg/otel/log"
 	"sync"
+)
+
+const (
+	OffsetEarliest = "earliest"
+	OffsetLatest   = "latest"
 )
 
 type ConsumerConfig struct {
@@ -19,9 +25,9 @@ type Consumer struct {
 	consumer *kafka.Consumer
 	config   ConsumerConfig
 
-	messageHandler func(msg *kafka.Message)
-	errorHandler   func(err kafka.Error)
-	otherHandler   func(ev kafka.Event)
+	messageHandler func(msg *kafka.Message) error
+	errorHandler   func(err kafka.Error) error
+	otherHandler   func(ev kafka.Event) error
 
 	wg     sync.WaitGroup
 	cancel context.CancelFunc
@@ -29,19 +35,19 @@ type Consumer struct {
 
 type Option func(c *Consumer)
 
-func WithMessageHandler(fn func(msg *kafka.Message)) Option {
+func WithMessageHandler(fn func(msg *kafka.Message) error) Option {
 	return func(c *Consumer) {
 		c.messageHandler = fn
 	}
 }
 
-func WithErrorHandler(fn func(err kafka.Error)) Option {
+func WithErrorHandler(fn func(err kafka.Error) error) Option {
 	return func(c *Consumer) {
 		c.errorHandler = fn
 	}
 }
 
-func WithOtherHandler(fn func(ev kafka.Event)) Option {
+func WithOtherHandler(fn func(ev kafka.Event) error) Option {
 	return func(c *Consumer) {
 		c.otherHandler = fn
 	}
@@ -126,51 +132,39 @@ func (c *Consumer) handleEvent(ev kafka.Event) {
 	// handle message
 	switch e := ev.(type) {
 	case *kafka.Message:
-		c.messageHandler(e)
+		_ = c.messageHandler(e)
 	case kafka.Error:
-		c.errorHandler(e)
+		_ = c.errorHandler(e)
 		if e.Code() == kafka.ErrAllBrokersDown {
 			break
 		}
 	default:
-		c.otherHandler(e)
+		_ = c.otherHandler(e)
 	}
 }
 
-//func (c *Consumer) handle(ctx context.Context, msg *kafka.Message) error {
-//	ctx = log.WithContext(ctx, "topic", msg.Topic, "partition", msg.Partition, "offset", msg.Offset, "timestamp", msg.Timestamp)
-//	backoff := NewBackoff(ctx, BackoffConfig{
-//		MinInterval:   1 * time.Second,
-//		MaxInterval:   10 * time.Second,
-//		BackoffFactor: 2.0,
-//		MaxRetries:    5,
-//	})
-//	for {
-//		err := h.handleFn(ctx, msg)
-//		if err == nil {
-//			return nil
-//		}
-//		log.Error(ctx, "failed to handle message", err)
-//
-//		backoff.Backoff()
-//		if backoff.GiveUp() {
-//			break
-//		}
-//	}
-//
-//	log.Info(ctx, "give up handling message")
-//
-//	return nil
-//}
-
-func noopMessageHandler(_ *kafka.Message) {
-	return
+func HandleWithBackOff[T kafka.Event](fn func(T) error, bo backoff.BackOff) func(T) error {
+	if bo == nil {
+		return fn
+	}
+	return func(t T) error {
+		op := func() error { return fn(t) }
+		err := backoff.Retry(op, bo)
+		if err != nil {
+			log.Error(context.Background(), "give up to handle message", err)
+		}
+		return err
+	}
 }
 
-func noopErrorHandler(_ kafka.Error) {
-	return
+func noopMessageHandler(_ *kafka.Message) error {
+	return nil
 }
 
-func noopOtherHandler(_ kafka.Event) {
-	return
+func noopErrorHandler(_ kafka.Error) error {
+	return nil
+}
+
+func noopOtherHandler(_ kafka.Event) error {
+	return nil
 }
