@@ -92,14 +92,14 @@ func (c *Consumer) Start() {
 		for {
 			ev := c.consumer.Poll(1000)
 			if ev == nil {
-				return
+				continue
 			}
 
 			c.handleEvent(ev)
 
 			// stop if ctx cancel
 			if ctx.Err() != nil {
-				return
+				break
 			}
 		}
 	}()
@@ -135,9 +135,6 @@ func (c *Consumer) handleEvent(ev kafka.Event) {
 		_ = c.messageHandler(e)
 	case kafka.Error:
 		_ = c.errorHandler(e)
-		if e.Code() == kafka.ErrAllBrokersDown {
-			break
-		}
 	default:
 		_ = c.otherHandler(e)
 	}
