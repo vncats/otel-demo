@@ -44,7 +44,6 @@ func (m Stats) Value() (driver.Value, error) {
 
 type UserAction struct {
 	ID      int      `json:"id"`
-	UID     string   `json:"uid"`
 	Payload prim.Map `json:"payload"`
 }
 

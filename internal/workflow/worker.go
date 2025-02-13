@@ -1,6 +1,7 @@
 package workflow
 
 import (
+	"github.com/vncats/otel-demo/internal/store"
 	"log/slog"
 	"os"
 
@@ -34,11 +35,13 @@ func NewClient() (client.Client, error) {
 	})
 }
 
-func NewWorker(c client.Client) worker.Worker {
+func NewWorker(c client.Client, store store.IStore) worker.Worker {
 	w := worker.New(c, TaskQueue, worker.Options{})
 	w.RegisterWorkflow(TrackUserActionWorkflow)
 
-	acts := &Activities{}
+	acts := &Activities{
+		store: store,
+	}
 	w.RegisterActivity(acts.ComposeAction)
 	w.RegisterActivity(acts.CreateAction)
 

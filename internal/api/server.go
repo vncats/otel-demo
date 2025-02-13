@@ -34,7 +34,7 @@ func NewServer(h IHandler) *Server {
 	mux.Handle("/movies/{id}/ratings/{score}", newRouteHandler(
 		h.RateMovie,
 		TraceRequest("GET", "/movies/{id}/ratings/{score}"),
-		TrackUserAction(h, "rate_movies"),
+		TrackUserAction(h, "rate_movie"),
 	))
 
 	server := &http.Server{
@@ -89,15 +89,17 @@ func TraceRequest(method, route string) Middleware {
 func TrackUserAction(h IHandler, action string) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			clonedCtx := baggage.ContextWithBaggage(context.Background(), baggage.FromContext(r.Context()))
+			bag := baggage.FromContext(r.Context())
 			payload := prim.Map{
 				"user_id":    getUserID(r),
+				"request_id": bag.Member("request_id").Value(),
 				"action":     action,
 				"user_agent": r.Header.Get("User-Agent"),
 			}
 			go func() {
 				spanCtx, span := otel.Tracer("middleware").Start(
-					clonedCtx, "track_user_action",
+					baggage.ContextWithBaggage(context.Background(), bag),
+					"track_user_action",
 					trace.WithLinks(trace.Link{
 						SpanContext: trace.SpanContextFromContext(r.Context()),
 					}),

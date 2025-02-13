@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"math/rand"
 	"net/http"
 	"os"
@@ -13,29 +14,24 @@ import (
 
 type Session struct {
 	UserID    string
-	SessionID string
 	UserAgent string
 }
 
 var sessions = []Session{
 	{
 		UserID:    "jesse_1201",
-		SessionID: "3f674707-3ef2-4276-b456-7293df489275",
 		UserAgent: "Chrome/135.1.0",
 	},
 	{
 		UserID:    "jesse_1201",
-		SessionID: "ead40ffe-b168-4ad5-b911-2a3e3d2ee6f7",
 		UserAgent: "Safari/537.3.0",
 	},
 	{
 		UserID:    "alice_2705",
-		SessionID: "10748401-471d-41f3-8df5-aadd89f7fcc0",
 		UserAgent: "Chrome/125.1.0",
 	},
 	{
 		UserID:    "peter_8802",
-		SessionID: "66b41dcb-ec88-4653-a599-459025d26ce9",
 		UserAgent: "Safari/135.1.0",
 	},
 }
@@ -79,7 +75,7 @@ func main() {
 		defer wg.Done()
 		intervalCall(ctx, 2*time.Second, func() {
 			ss := sessions[rand.Intn(len(sessions))]
-			baggage := fmt.Sprintf("user_id=%s,session_id=%s,user_agent=%s", ss.UserID, ss.SessionID, ss.UserAgent)
+			baggage := fmt.Sprintf("user_id=%s,request_id=%s,user_agent=%s", ss.UserID, uuid.NewString(), ss.UserAgent)
 			client.Get(ctx, "http://localhost:8080/movies", map[string]string{
 				"baggage":    baggage,
 				"user-agent": ss.UserAgent,
@@ -94,7 +90,7 @@ func main() {
 		defer wg.Done()
 		intervalCall(ctx, 2*time.Second, func() {
 			ss := sessions[rand.Intn(len(sessions))]
-			baggage := fmt.Sprintf("user_id=%s,session_id=%s,user_agent=%s", ss.UserID, ss.SessionID, ss.UserAgent)
+			baggage := fmt.Sprintf("user_id=%s,request_id=%s,user_agent=%s", ss.UserID, uuid.NewString(), ss.UserAgent)
 			url := fmt.Sprintf("http://localhost:8080/movies/%d/ratings/%d", 1+rand.Intn(3), 1+rand.Intn(5))
 			client.Get(ctx, url, map[string]string{
 				"baggage":    baggage,

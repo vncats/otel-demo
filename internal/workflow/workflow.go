@@ -2,7 +2,6 @@ package workflow
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/vncats/otel-demo/internal/store"
@@ -40,11 +39,15 @@ type Activities struct {
 }
 
 func (a *Activities) ComposeAction(ctx context.Context, payload prim.Map) (*store.UserAction, error) {
-	fmt.Println("compose action", payload)
-	return &store.UserAction{}, nil
+	return &store.UserAction{Payload: prim.Map{
+		"uid": payload.String("user_id"),
+		"rid": payload.String("request_id"),
+		"act": payload.String("action"),
+		"ua":  payload.String("user_agent"),
+		"ts":  time.Now().Unix(),
+	}}, nil
 }
 
 func (a *Activities) CreateAction(ctx context.Context, act *store.UserAction) error {
-	fmt.Println("create action", act)
-	return nil
+	return a.store.CreateUserAction(ctx, act)
 }

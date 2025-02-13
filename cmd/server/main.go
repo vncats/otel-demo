@@ -73,7 +73,7 @@ func main() {
 	defer tc.Close()
 
 	// New worker
-	w := workflow.NewWorker(tc)
+	w := workflow.NewWorker(tc, st)
 	if err = w.Start(); err != nil {
 		panic(err)
 	}

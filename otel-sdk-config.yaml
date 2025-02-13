@@ -38,4 +38,4 @@ logger_provider:
         export_timeout: 1000
 
 extra_config:
-  baggage: ["user_id", "session_id"]
+  baggage: ["user_id", "request_id"]
