@@ -75,11 +75,10 @@ func main() {
 		defer wg.Done()
 		intervalCall(ctx, 2*time.Second, func() {
 			ss := sessions[rand.Intn(len(sessions))]
-			baggage := fmt.Sprintf("user_id=%s,request_id=%s,user_agent=%s", ss.UserID, uuid.NewString(), ss.UserAgent)
 			client.Get(ctx, "http://localhost:8080/movies", map[string]string{
-				"baggage":    baggage,
-				"user-agent": ss.UserAgent,
-				"x-user-id":  ss.UserID,
+				"user-agent":   ss.UserAgent,
+				"x-user-id":    ss.UserID,
+				"x-request-id": uuid.NewString(),
 			})
 			fmt.Printf("== %s (%s): gets all movies\n", ss.UserID, ss.UserAgent)
 		})
@@ -90,12 +89,11 @@ func main() {
 		defer wg.Done()
 		intervalCall(ctx, 2*time.Second, func() {
 			ss := sessions[rand.Intn(len(sessions))]
-			baggage := fmt.Sprintf("user_id=%s,request_id=%s,user_agent=%s", ss.UserID, uuid.NewString(), ss.UserAgent)
 			url := fmt.Sprintf("http://localhost:8080/movies/%d/ratings/%d", 1+rand.Intn(3), 1+rand.Intn(5))
 			client.Get(ctx, url, map[string]string{
-				"baggage":    baggage,
-				"user-agent": ss.UserAgent,
-				"x-user-id":  ss.UserID,
+				"user-agent":   ss.UserAgent,
+				"x-user-id":    ss.UserID,
+				"x-request-id": uuid.NewString(),
 			})
 			fmt.Printf("== %s (%s): rates a movie\n", ss.UserID, ss.UserAgent)
 		})

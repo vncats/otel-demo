@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"context"
@@ -121,4 +121,8 @@ func parseInt(str string) int {
 
 func getUserID(req *http.Request) string {
 	return req.Header.Get("X-User-ID")
+}
+
+func getRequestID(req *http.Request) string {
+	return req.Header.Get("X-Request-ID")
 }

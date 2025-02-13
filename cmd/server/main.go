@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/vncats/otel-demo/internal/server"
 
-	"github.com/vncats/otel-demo/internal/api"
 	"github.com/vncats/otel-demo/internal/cache"
 	"github.com/vncats/otel-demo/internal/message"
 	"github.com/vncats/otel-demo/internal/store"
@@ -79,7 +79,7 @@ func main() {
 	}
 	defer w.Stop()
 
-	h := api.NewHandler(st, producer, cs, tc)
-	s := api.NewServer(h)
+	h := server.NewHandler(st, producer, cs, tc)
+	s := server.NewServer(h)
 	s.Start()
 }

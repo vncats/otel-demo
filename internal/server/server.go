@@ -1,19 +1,13 @@
-package api
+package server
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/vncats/otel-demo/pkg/otel/log"
-	"github.com/vncats/otel-demo/pkg/prim"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/trace"
 )
 
 type Middleware func(http.Handler) http.Handler
@@ -28,12 +22,14 @@ func NewServer(h IHandler) *Server {
 	mux.Handle("/movies", newRouteHandler(
 		h.GetMovies,
 		TraceRequest("GET", "/movies"),
+		PopulateBaggage,
 		TrackUserAction(h, "get_movies"),
 	))
 
 	mux.Handle("/movies/{id}/ratings/{score}", newRouteHandler(
 		h.RateMovie,
 		TraceRequest("GET", "/movies/{id}/ratings/{score}"),
+		PopulateBaggage,
 		TrackUserAction(h, "rate_movie"),
 	))
 
@@ -76,39 +72,4 @@ func newRouteHandler(handleFn func(ctx *RequestContext), middlewares ...Middlewa
 		handler = middlewares[i](handler)
 	}
 	return handler
-}
-
-func TraceRequest(method, route string) Middleware {
-	return func(next http.Handler) http.Handler {
-		handler := otelhttp.WithRouteTag(route, next)
-		handler = otelhttp.NewHandler(next, fmt.Sprintf("%s %s", method, route))
-		return handler
-	}
-}
-
-func TrackUserAction(h IHandler, action string) Middleware {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			bag := baggage.FromContext(r.Context())
-			payload := prim.Map{
-				"user_id":    getUserID(r),
-				"request_id": bag.Member("request_id").Value(),
-				"action":     action,
-				"user_agent": r.Header.Get("User-Agent"),
-			}
-			go func() {
-				spanCtx, span := otel.Tracer("middleware").Start(
-					baggage.ContextWithBaggage(context.Background(), bag),
-					"track_user_action",
-					trace.WithLinks(trace.Link{
-						SpanContext: trace.SpanContextFromContext(r.Context()),
-					}),
-				)
-				defer span.End()
-				h.TrackUserAction(spanCtx, payload)
-			}()
-
-			next.ServeHTTP(w, r)
-		})
-	}
 }
