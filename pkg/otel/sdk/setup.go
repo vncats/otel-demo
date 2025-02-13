@@ -15,7 +15,7 @@ import (
 )
 
 var defaultConfig = setupConfig{
-	configFile: os.Getenv("OTEL_SDK_DEFAULT_CONFIG_FILE"),
+	configFile: os.Getenv("OTEL_EXPERIMENTAL_CONFIG_FILE"),
 	enabled:    os.Getenv("OTEL_SDK_ENABLED") == "true",
 }
 

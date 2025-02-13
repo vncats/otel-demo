@@ -1,9 +1,10 @@
 package workflow
 
 import (
-	"github.com/vncats/otel-demo/internal/store"
 	"log/slog"
 	"os"
+
+	"github.com/vncats/otel-demo/internal/store"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/contrib/opentelemetry"
