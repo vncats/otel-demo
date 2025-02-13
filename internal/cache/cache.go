@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
+
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/vncats/otel-demo/internal/store"
-	"time"
 )
 
 var ErrCacheMiss = errors.New("cache miss")

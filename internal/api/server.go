@@ -3,16 +3,17 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/vncats/otel-demo/pkg/otel/log"
 	"github.com/vncats/otel-demo/pkg/prim"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/trace"
-	"net/http"
-	"os"
-	"os/signal"
-	"time"
 )
 
 type Middleware func(http.Handler) http.Handler

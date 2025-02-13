@@ -35,7 +35,7 @@ logger_provider:
     - batch:
         exporter:
           console: {}
-        export_timeout: 5
+        export_timeout: 1000
 
 extra_config:
-  baggage: ["user_id", "ip"]
+  baggage: ["user_id", "session_id"]

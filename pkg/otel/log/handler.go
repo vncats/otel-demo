@@ -2,10 +2,11 @@ package log
 
 import (
 	"context"
-	slogctx "github.com/veqryn/slog-context"
-	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"log/slog"
 	"runtime"
+
+	slogctx "github.com/veqryn/slog-context"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
 type Option func(*Handler)

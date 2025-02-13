@@ -3,11 +3,12 @@ package tracing
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"go.opentelemetry.io/otel/attribute"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
-	"strconv"
 )
 
 // WrapConsumer wraps a kafka.Consumer so that any consumed events are traced.

@@ -3,13 +3,14 @@ package log
 import (
 	"context"
 	"errors"
+	"slices"
+	"testing"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/log/global"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
-	"slices"
-	"testing"
 )
 
 // MockLogExporter is a mock implementation of LogExporter for testing

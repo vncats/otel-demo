@@ -1,13 +1,14 @@
 package workflow
 
 import (
+	"log/slog"
+	"os"
+
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/contrib/opentelemetry"
 	"go.temporal.io/sdk/interceptor"
 	tlog "go.temporal.io/sdk/log"
 	"go.temporal.io/sdk/worker"
-	"log/slog"
-	"os"
 )
 
 const (

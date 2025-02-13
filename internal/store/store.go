@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"github.com/vncats/otel-demo/pkg/prim"
 	"gorm.io/driver/mysql"

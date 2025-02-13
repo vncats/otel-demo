@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/vncats/otel-demo/pkg/kafka/tracing"
 	"go.opentelemetry.io/otel"

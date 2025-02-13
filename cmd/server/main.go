@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/vncats/otel-demo/internal/api"
 	"github.com/vncats/otel-demo/internal/cache"
 	"github.com/vncats/otel-demo/internal/message"

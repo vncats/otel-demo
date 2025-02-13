@@ -3,11 +3,12 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/vncats/otel-demo/pkg/kafka/tracing"
 	"github.com/vncats/otel-demo/pkg/otel/log"
 	"github.com/vncats/otel-demo/pkg/retry"
-	"sync"
 )
 
 const (

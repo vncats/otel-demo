@@ -3,15 +3,15 @@ package workflow
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/vncats/otel-demo/internal/store"
 	"github.com/vncats/otel-demo/pkg/prim"
-	"time"
 
 	"go.temporal.io/sdk/workflow"
 )
 
-type TrackUserActionRequest struct {
-}
+type TrackUserActionRequest struct{}
 
 func TrackUserActionWorkflow(ctx workflow.Context, payload prim.Map) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{

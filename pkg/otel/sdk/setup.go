@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+	"os"
+
 	config "go.opentelemetry.io/contrib/config/v0.3.0"
 	"go.opentelemetry.io/contrib/processors/baggagecopy"
 	"go.opentelemetry.io/otel"
@@ -10,7 +12,6 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"gopkg.in/yaml.v3"
-	"os"
 )
 
 var defaultConfig = setupConfig{

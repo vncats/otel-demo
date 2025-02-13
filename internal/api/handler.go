@@ -2,6 +2,9 @@ package api
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/vncats/otel-demo/internal/cache"
@@ -11,8 +14,6 @@ import (
 	"github.com/vncats/otel-demo/pkg/otel/log"
 	"github.com/vncats/otel-demo/pkg/prim"
 	"go.temporal.io/sdk/client"
-	"net/http"
-	"strconv"
 )
 
 type IHandler interface {

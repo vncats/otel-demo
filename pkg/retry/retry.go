@@ -1,8 +1,9 @@
 package retry
 
 import (
-	"github.com/cenkalti/backoff/v4"
 	"time"
+
+	"github.com/cenkalti/backoff/v4"
 )
 
 type Config struct {

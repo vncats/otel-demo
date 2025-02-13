@@ -2,14 +2,13 @@ package log
 
 import (
 	"context"
-	slogctx "github.com/veqryn/slog-context"
 	"log/slog"
 	"sync/atomic"
+
+	slogctx "github.com/veqryn/slog-context"
 )
 
-var (
-	globalLogger atomic.Value
-)
+var globalLogger atomic.Value
 
 func init() {
 	globalLogger.Store(slog.Default())
