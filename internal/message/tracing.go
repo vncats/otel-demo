@@ -1,4 +1,4 @@
-package consumer
+package message
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const defaultTracerName = "github.com/confluentinc/confluent-kafka-go"
+const defaultTracerName = "github.com/vncats/otel-demo/message"
 
 var (
 	propagator = otel.GetTextMapPropagator()

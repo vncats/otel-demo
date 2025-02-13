@@ -97,17 +97,17 @@ func (c *Consumer) Start() {
 	go func() {
 		defer c.wg.Done()
 		for {
+			// stop if ctx cancel
+			if ctx.Err() != nil {
+				break
+			}
+
 			ev := c.client.Poll(1000)
 			if ev == nil {
 				continue
 			}
 
 			c.handleEvent(ev)
-
-			// stop if ctx cancel
-			if ctx.Err() != nil {
-				break
-			}
 		}
 	}()
 }

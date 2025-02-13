@@ -1,4 +1,4 @@
-package consumer
+package message
 
 import (
 	"encoding/json"
@@ -42,7 +42,7 @@ type statsHandler struct {
 }
 
 func (s *statsHandler) handleMessage(msg *ckafka.Message) error {
-	ctx, span := startSpan(msg, "statsHandler.handleMessage")
+	ctx, span := startSpan(msg, "handle message")
 	defer span.End()
 
 	rating := store.Rating{}

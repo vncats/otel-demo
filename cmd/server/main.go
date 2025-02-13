@@ -3,9 +3,8 @@ package main
 import (
 	"context"
 	"github.com/vncats/otel-demo/internal/cache"
-	"github.com/vncats/otel-demo/internal/consumer"
 	"github.com/vncats/otel-demo/internal/handler"
-	"github.com/vncats/otel-demo/internal/producer"
+	"github.com/vncats/otel-demo/internal/message"
 	"github.com/vncats/otel-demo/internal/store"
 	"github.com/vncats/otel-demo/internal/workflow"
 	"github.com/vncats/otel-demo/pkg/otel/log"
@@ -44,24 +43,27 @@ func main() {
 	}
 
 	// New cache
-	c, err := cache.NewCache("redis://:password@localhost:6379/1", st)
+	cs, err := cache.NewCache("redis://:password@localhost:6379/1", st)
 	if err != nil {
 		panic(err)
 	}
-	defer c.Close()
+	defer cs.Close()
 
-	// Start consumer
-	cs, err := consumer.NewStatsConsumer(st)
+	// New consumer
+	consumer, err := message.NewStatsConsumer(st)
 	if err != nil {
 		panic(err)
 	}
-	cs.Start()
-	defer cs.Stop()
+	consumer.Start()
+	defer consumer.Stop()
 
-	p, err := producer.NewProducer("localhost:9092")
+	// New producer
+	producer, err := message.NewProducer("localhost:9092")
 	if err != nil {
 		panic(err)
 	}
+	producer.Start()
+	defer producer.Stop()
 
 	tc, err := workflow.NewClient()
 	if err != nil {
@@ -69,14 +71,14 @@ func main() {
 	}
 	defer tc.Close()
 
+	// New worker
 	w := workflow.NewWorker(tc)
-	if err := w.Start(); err != nil {
+	if err = w.Start(); err != nil {
 		panic(err)
 	}
 	defer w.Stop()
 
-	h := handler.NewHandler(st, p, c)
-
+	h := handler.NewHandler(st, producer, cs)
 	s := handler.NewServer(h, tc)
 	_ = s.Start(ctx)
 }
