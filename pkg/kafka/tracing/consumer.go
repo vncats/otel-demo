@@ -68,8 +68,10 @@ func (c *Consumer) startSpan(msg *kafka.Message) trace.Span {
 	spanCtx, span := tracer.Start(
 		parentCtx,
 		fmt.Sprintf("receive %s", *msg.TopicPartition.Topic),
+		trace.WithNewRoot(),
 		trace.WithAttributes(attrs...),
 		trace.WithSpanKind(trace.SpanKindConsumer),
+		trace.WithLinks(trace.Link{SpanContext: trace.SpanContextFromContext(parentCtx)}),
 	)
 	propagator.Inject(spanCtx, carrier)
 

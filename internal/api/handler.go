@@ -8,6 +8,7 @@ import (
 	"github.com/vncats/otel-demo/internal/message"
 	"github.com/vncats/otel-demo/internal/store"
 	"github.com/vncats/otel-demo/internal/workflow"
+	"github.com/vncats/otel-demo/pkg/otel/log"
 	"github.com/vncats/otel-demo/pkg/prim"
 	"go.temporal.io/sdk/client"
 	"net/http"
@@ -80,6 +81,7 @@ func (h *Handler) RateMovie(ctx *RequestContext) {
 		Score: parseInt(ctx.Request.PathValue("score")),
 	}
 	if err := h.validator.Struct(req); err != nil {
+		log.Error(ctx.Context(), "invalid request", "error", err)
 		ctx.SendBadRequest()
 		return
 	}

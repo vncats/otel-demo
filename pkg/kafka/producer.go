@@ -31,7 +31,7 @@ func (o ProducerOptions) KafkaConfig() kafka.ConfigMap {
 		"bootstrap.servers":  o.Brokers,
 		"batch.num.messages": 50,
 		"batch.size":         16384,
-		"linger.ms":          100,
+		"linger.ms":          10,
 		"compression.type":   "snappy",
 	}
 	setKafkaConfig(cm, "batch.size", o.BatchSize)

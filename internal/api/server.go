@@ -7,6 +7,7 @@ import (
 	"github.com/vncats/otel-demo/pkg/prim"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/trace"
 	"net/http"
 	"os"
@@ -87,19 +88,21 @@ func TraceRequest(method, route string) Middleware {
 func TrackUserAction(h IHandler, action string) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			spanContext := trace.SpanContextFromContext(r.Context())
+			clonedCtx := baggage.ContextWithBaggage(context.Background(), baggage.FromContext(r.Context()))
 			payload := prim.Map{
 				"user_id":    getUserID(r),
 				"action":     action,
 				"user_agent": r.Header.Get("User-Agent"),
 			}
 			go func() {
-				newCtx, newSpan := otel.Tracer("middleware").Start(
-					context.Background(), "track_user_action",
-					trace.WithLinks(trace.Link{SpanContext: spanContext}),
+				spanCtx, span := otel.Tracer("middleware").Start(
+					clonedCtx, "track_user_action",
+					trace.WithLinks(trace.Link{
+						SpanContext: trace.SpanContextFromContext(r.Context()),
+					}),
 				)
-				defer newSpan.End()
-				h.TrackUserAction(newCtx, payload)
+				defer span.End()
+				h.TrackUserAction(spanCtx, payload)
 			}()
 
 			next.ServeHTTP(w, r)
