@@ -41,7 +41,7 @@ func (m Stats) Value() (driver.Value, error) {
 	return json.Marshal(m)
 }
 
-type UserActivity struct {
+type UserAction struct {
 	ID      int      `json:"id"`
 	UID     string   `json:"uid"`
 	Payload prim.Map `json:"payload"`
@@ -56,7 +56,7 @@ type Rating struct {
 }
 
 type IStore interface {
-	CreateUserActivity(ctx context.Context, act *UserActivity) error
+	CreateUserAction(ctx context.Context, act *UserAction) error
 	CreateRating(ctx context.Context, rating *Rating) error
 	GetRatingsByMovie(ctx context.Context, movieID int) ([]*Rating, error)
 	UpdateStats(ctx context.Context, movieID int, stats *Stats) error
@@ -84,7 +84,7 @@ type Store struct {
 	db *gorm.DB
 }
 
-func (s *Store) CreateUserActivity(ctx context.Context, act *UserActivity) error {
+func (s *Store) CreateUserAction(ctx context.Context, act *UserAction) error {
 	return s.db.WithContext(ctx).Create(act).Error
 }
 
@@ -137,7 +137,7 @@ func (s *Store) GetMovies(ctx context.Context) ([]*Movie, error) {
 }
 
 func (s *Store) Migrate() error {
-	err := s.db.AutoMigrate(&Movie{}, &Rating{}, &UserActivity{})
+	err := s.db.AutoMigrate(&Movie{}, &Rating{}, &UserAction{})
 	if err != nil {
 		return err
 	}

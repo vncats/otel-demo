@@ -35,11 +35,11 @@ func NewClient() (client.Client, error) {
 
 func NewWorker(c client.Client) worker.Worker {
 	w := worker.New(c, TaskQueue, worker.Options{})
-	w.RegisterWorkflow(LogActivityWorkflow)
+	w.RegisterWorkflow(TrackUserActionWorkflow)
 
 	acts := &Activities{}
-	w.RegisterActivity(acts.ComposeActivity)
-	w.RegisterActivity(acts.CreateActivity)
+	w.RegisterActivity(acts.ComposeAction)
+	w.RegisterActivity(acts.CreateAction)
 
 	return w
 }
