@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"context"
 	"encoding/json"
 	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/vncats/otel-demo/internal/store"
@@ -18,22 +17,19 @@ type StatsConsumer struct {
 // NewStatsConsumer returns new instance
 func NewStatsConsumer(st store.IStore) (*StatsConsumer, error) {
 	handler := statsHandler{store: st}
-	consumer, err := kafka.NewConsumer(
-		kafka.ConsumerConfig{
-			Brokers: "localhost:9092",
-			Group:   "movie_stats_consumer_group",
-			Topics:  []string{"movie.rating-created"},
-			Offset:  kafka.OffsetEarliest,
-		},
-		kafka.WithMessageHandler(
-			kafka.HandleWithRetry(handler.handleMessage, retry.Config{
-				InitialInterval: 5 * time.Second,
-				MaxInterval:     30 * time.Second,
-				Multiplier:      2,
-				MaxRetries:      5,
-			}),
-		),
-	)
+	consumer, err := kafka.NewConsumer(kafka.ConsumerOptions{
+		Brokers:       "localhost:9092",
+		Group:         "movie_stats_consumer_group",
+		Topics:        []string{"movie.rating-created"},
+		Offset:        kafka.OffsetEarliest,
+		EnableTracing: true,
+		MessageHandler: kafka.HandleWithRetry(handler.handleMessage, retry.Config{
+			InitialInterval: 5 * time.Second,
+			MaxInterval:     30 * time.Second,
+			Multiplier:      2,
+			MaxRetries:      5,
+		}),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +42,8 @@ type statsHandler struct {
 }
 
 func (s *statsHandler) handleMessage(msg *ckafka.Message) error {
-	ctx := context.Background()
+	ctx, span := startSpan(msg, "statsHandler.handleMessage")
+	defer span.End()
 
 	rating := store.Rating{}
 	if err := json.Unmarshal(msg.Value, &rating); err != nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/vncats/otel-demo/pkg/kafka/tracing"
 	"github.com/vncats/otel-demo/pkg/otel/log"
 	"github.com/vncats/otel-demo/pkg/retry"
 	"sync"
@@ -14,16 +15,26 @@ const (
 	OffsetLatest   = "latest"
 )
 
-type ConsumerConfig struct {
-	Brokers string   `yaml:"brokers"`
-	Group   string   `yaml:"group"`
-	Topics  []string `yaml:"topics"`
-	Offset  string   `yaml:"offset"`
+type ConsumerClient interface {
+	Poll(timeoutMs int) kafka.Event
+	Close() error
+}
+
+type ConsumerOptions struct {
+	Brokers string
+	Group   string
+	Topics  []string
+	Offset  string
+
+	EnableTracing bool
+
+	MessageHandler func(msg *kafka.Message) error
+	ErrorHandler   func(err kafka.Error) error
+	OtherHandler   func(ev kafka.Event) error
 }
 
 type Consumer struct {
-	consumer *kafka.Consumer
-	config   ConsumerConfig
+	client ConsumerClient
 
 	messageHandler func(msg *kafka.Message) error
 	errorHandler   func(err kafka.Error) error
@@ -33,49 +44,45 @@ type Consumer struct {
 	cancel context.CancelFunc
 }
 
-type Option func(c *Consumer)
-
-func WithMessageHandler(fn func(msg *kafka.Message) error) Option {
-	return func(c *Consumer) {
-		c.messageHandler = fn
+func NewConsumer(opts ConsumerOptions) (*Consumer, error) {
+	if opts.MessageHandler == nil {
+		opts.MessageHandler = noopMessageHandler
 	}
-}
 
-func WithErrorHandler(fn func(err kafka.Error) error) Option {
-	return func(c *Consumer) {
-		c.errorHandler = fn
+	if opts.ErrorHandler == nil {
+		opts.ErrorHandler = noopErrorHandler
 	}
-}
 
-func WithOtherHandler(fn func(ev kafka.Event) error) Option {
-	return func(c *Consumer) {
-		c.otherHandler = fn
+	if opts.OtherHandler == nil {
+		opts.OtherHandler = noopOtherHandler
 	}
-}
 
-func NewConsumer(cfg ConsumerConfig, opts ...Option) (*Consumer, error) {
-	c, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": cfg.Brokers,
-		"group.id":          cfg.Group,
-		"auto.offset.reset": cfg.Offset,
-	})
+	kkConfig := kafka.ConfigMap{
+		"bootstrap.servers": opts.Brokers,
+		"group.id":          opts.Group,
+		"auto.offset.reset": opts.Offset,
+	}
+	c, err := kafka.NewConsumer(&kkConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = c.SubscribeTopics(cfg.Topics, nil); err != nil {
+	if err = c.SubscribeTopics(opts.Topics, nil); err != nil {
 		return nil, err
 	}
 
-	consumer := &Consumer{
-		config:         cfg,
-		consumer:       c,
-		messageHandler: noopMessageHandler,
-		errorHandler:   noopErrorHandler,
-		otherHandler:   noopOtherHandler,
+	var client ConsumerClient = c
+	if opts.EnableTracing {
+		client = tracing.WrapConsumer(c, tracing.WrapOptions{
+			SpanAttrs: tracing.GetKafkaAttrs(kkConfig),
+		})
 	}
-	for _, opt := range opts {
-		opt(consumer)
+
+	consumer := &Consumer{
+		client:         client,
+		messageHandler: opts.MessageHandler,
+		errorHandler:   opts.ErrorHandler,
+		otherHandler:   opts.OtherHandler,
 	}
 
 	return consumer, nil
@@ -90,7 +97,7 @@ func (c *Consumer) Start() {
 	go func() {
 		defer c.wg.Done()
 		for {
-			ev := c.consumer.Poll(1000)
+			ev := c.client.Poll(1000)
 			if ev == nil {
 				continue
 			}
@@ -115,8 +122,8 @@ func (c *Consumer) Stop() {
 	c.wg.Wait()
 
 	log.Info(ctx, "Closing consumer")
-	if err := c.consumer.Close(); err != nil {
-		log.Error(ctx, "failed to close consumer group", err)
+	if err := c.client.Close(); err != nil {
+		log.Error(ctx, "failed to close consumer", err)
 	}
 
 	log.Info(ctx, "Stopped consumer")
