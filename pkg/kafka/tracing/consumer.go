@@ -95,7 +95,7 @@ func (c *Consumer) startSpan(msg *kafka.Message) {
 	propagator.Inject(spanCtx, carrier)
 
 	c.endPrevSpanFn = func() {
-		span.End()
+		defer span.End()
 		elapsedTime := float64(time.Since(startTime)) / float64(time.Millisecond)
 		c.durationMeasure.Record(spanCtx, elapsedTime, metric.WithAttributes(attrs...))
 	}
