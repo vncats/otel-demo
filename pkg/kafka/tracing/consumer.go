@@ -63,27 +63,32 @@ func (c *Consumer) startSpan(msg *kafka.Message) {
 	carrier := NewMessageCarrier(msg)
 	parentCtx := propagator.Extract(context.Background(), carrier)
 
-	attrs := []attribute.KeyValue{
+	operationName := fmt.Sprintf("receive %s", *msg.TopicPartition.Topic)
+
+	attrs := append(
+		c.spanAttrs,
+		semconv.MessagingOperationName(operationName),
 		semconv.MessagingOperationTypeReceive,
 		semconv.MessagingSystemKafka,
+		semconv.MessagingDestinationName(*msg.TopicPartition.Topic),
+	)
+
+	spanAttrs := append(
+		attrs,
 		semconv.MessagingKafkaMessageOffset(int(msg.TopicPartition.Offset)),
 		semconv.MessagingKafkaMessageKey(string(msg.Key)),
-		semconv.MessagingDestinationName(*msg.TopicPartition.Topic),
 		semconv.MessagingMessageID(strconv.FormatInt(int64(msg.TopicPartition.Offset), 10)),
 		semconv.MessagingDestinationPartitionID(strconv.Itoa(int(msg.TopicPartition.Partition))),
 		semconv.MessagingMessageBodySize(getMsgSize(msg)),
-	}
-	attrs = append(attrs, c.spanAttrs...)
+	)
 
 	startTime := time.Now()
-	operationName := fmt.Sprintf("receive %s", *msg.TopicPartition.Topic)
-
 	spanCtx, span := tracer.Start(
 		parentCtx,
 		operationName,
 		trace.WithNewRoot(),
 		trace.WithTimestamp(startTime),
-		trace.WithAttributes(attrs...),
+		trace.WithAttributes(spanAttrs...),
 		trace.WithSpanKind(trace.SpanKindConsumer),
 		trace.WithLinks(trace.Link{SpanContext: trace.SpanContextFromContext(parentCtx)}),
 	)
@@ -91,11 +96,8 @@ func (c *Consumer) startSpan(msg *kafka.Message) {
 
 	c.endPrevSpanFn = func() {
 		span.End()
-		opts := metric.WithAttributes(
-			attribute.String("operation.name", operationName),
-		)
 		elapsedTime := float64(time.Since(startTime)) / float64(time.Millisecond)
-		c.durationMeasure.Record(spanCtx, elapsedTime, opts)
+		c.durationMeasure.Record(spanCtx, elapsedTime, metric.WithAttributes(attrs...))
 	}
 }
 
