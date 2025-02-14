@@ -14,9 +14,8 @@ import (
 
 func TraceRequest(method, route string) Middleware {
 	return func(next http.Handler) http.Handler {
-		handler := otelhttp.WithRouteTag(route, next)
-		handler = otelhttp.NewHandler(next, fmt.Sprintf("%s %s", method, route))
-		return handler
+		next = otelhttp.WithRouteTag(route, next)
+		return otelhttp.NewHandler(next, fmt.Sprintf("%s %s", method, route))
 	}
 }
 
