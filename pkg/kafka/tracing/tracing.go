@@ -7,11 +7,12 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
-const defaultTracerName = "github.com/confluentinc/confluent-kafka-go"
+const scopeName = "github.com/confluentinc/confluent-kafka-go"
 
 var (
 	propagator = otel.GetTextMapPropagator()
-	tracer     = otel.Tracer(defaultTracerName)
+	tracer     = otel.Tracer(scopeName)
+	meter      = otel.Meter(scopeName)
 )
 
 type WrapOptions struct {

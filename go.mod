@@ -15,7 +15,7 @@ require (
 	github.com/veqryn/slog-context v0.7.0
 	go.opentelemetry.io/contrib/bridges/otelslog v0.9.0
 	go.opentelemetry.io/contrib/config v0.14.0
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.59.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.59.0
 	go.opentelemetry.io/contrib/processors/baggagecopy v0.7.0
 	go.opentelemetry.io/otel v1.34.0
