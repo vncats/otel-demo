@@ -59,12 +59,13 @@ func main() {
 	defer cancel()
 
 	client := NewClient()
+	interval := 500 * time.Millisecond
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		intervalCall(ctx, 2*time.Second, func() {
+		intervalCall(ctx, interval, func() {
 			userID, userAgent := randomSession()
 			client.Get(ctx, "http://localhost:8080/movies", map[string]string{
 				"user-agent":   userAgent,
@@ -78,7 +79,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		intervalCall(ctx, 2*time.Second, func() {
+		intervalCall(ctx, interval, func() {
 			url := fmt.Sprintf("http://localhost:8080/movies/%d/ratings/%d", 1+rand.Intn(3), 1+rand.Intn(5))
 			userID, userAgent := randomSession()
 			client.Get(ctx, url, map[string]string{
