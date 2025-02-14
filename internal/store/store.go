@@ -136,7 +136,6 @@ func (s *Store) GetRatingCounts(ctx context.Context, movieID int) ([]*RatingCoun
 		Select("score, count(*) as count").
 		Group("score").
 		Scan(&results).Error
-
 	if err != nil {
 		return nil, err
 	}

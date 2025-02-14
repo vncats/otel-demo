@@ -3,8 +3,9 @@ package server
 import (
 	"context"
 	"fmt"
-	"go.opentelemetry.io/otel/attribute"
 	"net/http"
+
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/vncats/otel-demo/pkg/prim"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"

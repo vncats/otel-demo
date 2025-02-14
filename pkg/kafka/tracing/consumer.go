@@ -3,10 +3,11 @@ package tracing
 import (
 	"context"
 	"fmt"
-	"go.opentelemetry.io/otel/metric"
 	"strconv"
 	"sync"
 	"time"
+
+	"go.opentelemetry.io/otel/metric"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"go.opentelemetry.io/otel/attribute"
