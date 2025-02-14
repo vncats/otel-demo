@@ -2,10 +2,10 @@ fmt:
 	@gofumpt -w `go list -f {{.Dir}} ./... | grep -v /vendor/`
 
 up:
-	@docker compose -p movie -f docker-compose.yaml up -d --wait
+	@docker compose -p movie -f ./docker/docker-compose.yaml up -d --wait
 
 down:
-	@docker compose -p movie -f docker-compose.yaml down -v --remove-orphans
+	@docker compose -p movie -f ./docker/docker-compose.yaml down -v --remove-orphans
 
 server:
 	@OTEL_SDK_ENABLED=true \
