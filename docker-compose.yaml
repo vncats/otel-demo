@@ -65,9 +65,9 @@ services:
       - "4317:4317"   # OTLP gRPC receiver
       - "55679:55679" # zpages extension
     depends_on:
-      - jaeger-all-in-one
+      - jaeger
 
-  jaeger-all-in-one:
+  jaeger:
     image: jaegertracing/all-in-one:latest
     restart: always
     ports:
