@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/vncats/otel-demo/pkg/prim"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/baggage"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -18,8 +19,8 @@ func TraceRequest(method, route string) Middleware {
 	return func(next http.Handler) http.Handler {
 		operationName := fmt.Sprintf("%s %s", method, route)
 		attrs := []attribute.KeyValue{
-			attribute.String("http.route", route),
-			attribute.String("operation.name", operationName),
+			semconv.HTTPRoute(route),
+			attribute.String("http.operation.name", operationName),
 		}
 
 		next = WithAttributes(next, attrs...)
