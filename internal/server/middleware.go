@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel/attribute"
 	"net/http"
 
 	"github.com/vncats/otel-demo/pkg/prim"
@@ -14,9 +15,28 @@ import (
 
 func TraceRequest(method, route string) Middleware {
 	return func(next http.Handler) http.Handler {
-		next = otelhttp.WithRouteTag(route, next)
-		return otelhttp.NewHandler(next, fmt.Sprintf("%s %s", method, route))
+		operationName := fmt.Sprintf("%s %s", method, route)
+		attrs := []attribute.KeyValue{
+			attribute.String("http.route", route),
+			attribute.String("operation.name", operationName),
+		}
+
+		next = WithAttributes(next, attrs...)
+
+		return otelhttp.NewHandler(next, operationName)
 	}
+}
+
+func WithAttributes(h http.Handler, attrs ...attribute.KeyValue) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		span := trace.SpanFromContext(r.Context())
+		span.SetAttributes(attrs...)
+
+		labeler, _ := otelhttp.LabelerFromContext(r.Context())
+		labeler.Add(attrs...)
+
+		h.ServeHTTP(w, r)
+	})
 }
 
 func PopulateBaggage(next http.Handler) http.Handler {
