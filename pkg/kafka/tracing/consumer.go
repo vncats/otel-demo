@@ -96,7 +96,7 @@ func (c *Consumer) startSpan(msg *kafka.Message) {
 
 	c.endPrevSpanFn = func() {
 		span.End()
-		elapsedTime := time.Since(startTime).Seconds()
+		elapsedTime := float64(time.Since(startTime)) / float64(time.Millisecond)
 		c.durationMeasure.Record(spanCtx, elapsedTime, metric.WithAttributes(attrs...))
 	}
 }
@@ -116,7 +116,7 @@ func (c *Consumer) createMetrics() error {
 
 	c.durationMeasure, err = meter.Float64Histogram(
 		semconv.MessagingProcessDurationName,
-		metric.WithUnit(semconv.MessagingProcessDurationUnit),
+		metric.WithUnit("ms"),
 		metric.WithDescription(semconv.MessagingProcessDurationDescription),
 	)
 	if err != nil {
