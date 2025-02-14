@@ -13,28 +13,18 @@ import (
 	"github.com/google/uuid"
 )
 
-type Session struct {
-	UserID    string
-	UserAgent string
+var userAgents = []string{
+	"Chrome/135.1.0",
+	"Safari/537.3.0",
+	"Firefox/235.1.0",
+	"Edge/135.1.0",
+	"Opera/135.1.0",
 }
 
-var sessions = []Session{
-	{
-		UserID:    "jesse_1201",
-		UserAgent: "Chrome/135.1.0",
-	},
-	{
-		UserID:    "jesse_1201",
-		UserAgent: "Safari/537.3.0",
-	},
-	{
-		UserID:    "alice_2705",
-		UserAgent: "Chrome/125.1.0",
-	},
-	{
-		UserID:    "peter_8802",
-		UserAgent: "Safari/135.1.0",
-	},
+func randomSession() (userID string, userAgent string) {
+	userID = fmt.Sprintf("user_%d", time.Now().Unix())
+	userAgent = userAgents[rand.Intn(len(userAgents))]
+	return
 }
 
 type Client struct {
@@ -75,13 +65,13 @@ func main() {
 	go func() {
 		defer wg.Done()
 		intervalCall(ctx, 2*time.Second, func() {
-			ss := sessions[rand.Intn(len(sessions))]
+			userID, userAgent := randomSession()
 			client.Get(ctx, "http://localhost:8080/movies", map[string]string{
-				"user-agent":   ss.UserAgent,
-				"x-user-id":    ss.UserID,
+				"user-agent":   userAgent,
+				"x-user-id":    userID,
 				"x-request-id": uuid.NewString(),
 			})
-			fmt.Printf("== %s (%s): gets all movies\n", ss.UserID, ss.UserAgent)
+			fmt.Printf("== %s (%s): gets all movies\n", userID, userAgent)
 		})
 	}()
 
@@ -89,14 +79,14 @@ func main() {
 	go func() {
 		defer wg.Done()
 		intervalCall(ctx, 2*time.Second, func() {
-			ss := sessions[rand.Intn(len(sessions))]
 			url := fmt.Sprintf("http://localhost:8080/movies/%d/ratings/%d", 1+rand.Intn(3), 1+rand.Intn(5))
+			userID, userAgent := randomSession()
 			client.Get(ctx, url, map[string]string{
-				"user-agent":   ss.UserAgent,
-				"x-user-id":    ss.UserID,
+				"user-agent":   userAgent,
+				"x-user-id":    userID,
 				"x-request-id": uuid.NewString(),
 			})
-			fmt.Printf("== %s (%s): rates a movie\n", ss.UserID, ss.UserAgent)
+			fmt.Printf("== %s (%s): rates a movie\n", userID, userAgent)
 		})
 	}()
 

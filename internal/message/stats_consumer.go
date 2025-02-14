@@ -51,25 +51,23 @@ func (s *statsHandler) handleMessage(msg *ckafka.Message) error {
 		return err
 	}
 
-	ratings, err := s.store.GetRatingsByMovie(ctx, rating.MovieID)
+	counts, err := s.store.GetRatingCounts(ctx, rating.MovieID)
 	if err != nil {
 		return err
 	}
-	if len(ratings) == 0 {
-		return err
+	if len(counts) == 0 {
+		return nil
 	}
 
 	stats := &store.Stats{
 		Histogram: map[int]int{},
 	}
+
 	scoreSum := 0
-	for _, r := range ratings {
-		scoreSum += r.Score
-		stats.NumRating++
-		if _, ok := stats.Histogram[r.Score]; !ok {
-			stats.Histogram[r.Score] = 0
-		}
-		stats.Histogram[r.Score]++
+	for _, group := range counts {
+		stats.NumRating += group.Count
+		stats.Histogram[group.Score] = group.Count
+		scoreSum += group.Score * group.Count
 	}
 	stats.AvgScore = math.Round(float64(scoreSum)*100/float64(stats.NumRating)) / 100
 

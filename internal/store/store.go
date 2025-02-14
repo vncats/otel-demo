@@ -55,10 +55,16 @@ type Rating struct {
 	Score   int    `json:"score"`
 }
 
+type RatingCount struct {
+	Score int
+	Count int
+}
+
 type IStore interface {
 	CreateUserAction(ctx context.Context, act *UserAction) error
 	CreateRating(ctx context.Context, rating *Rating) error
 	GetRatingsByMovie(ctx context.Context, movieID int) ([]*Rating, error)
+	GetRatingCounts(ctx context.Context, movieID int) ([]*RatingCount, error)
 	UpdateStats(ctx context.Context, movieID int, stats *Stats) error
 	GetMovies(ctx context.Context) ([]*Movie, error)
 }
@@ -121,6 +127,21 @@ func (s *Store) GetRatingsByMovie(ctx context.Context, movieID int) ([]*Rating, 
 	}
 
 	return ratings, nil
+}
+
+func (s *Store) GetRatingCounts(ctx context.Context, movieID int) ([]*RatingCount, error) {
+	var results []*RatingCount
+	err := s.db.WithContext(ctx).Model(&Rating{}).
+		Where("movie_id = ?", movieID).
+		Select("score, count(*) as count").
+		Group("score").
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 func (s *Store) GetMovies(ctx context.Context) ([]*Movie, error) {
