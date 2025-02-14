@@ -128,7 +128,7 @@ func baggageFilter(keys []string) baggagecopy.Filter {
 		return nil
 	}
 
-	km := make(map[string]struct{}, len(keys))
+	km := map[string]struct{}{}
 	for _, key := range keys {
 		km[key] = struct{}{}
 	}
