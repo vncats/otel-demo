@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -50,6 +51,10 @@ func (s *Server) Start() {
 	go func() {
 		srvErr <- s.server.ListenAndServe()
 	}()
+
+	fmt.Println("== Server is running at http://localhost:8080/movies")
+	fmt.Println("== Traces: http://localhost:16686")
+	fmt.Println("== Metrics: http://localhost:9090")
 
 	// Wait for interruption.
 	select {
