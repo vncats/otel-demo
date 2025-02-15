@@ -17,6 +17,11 @@ exporters:
     tls:
       insecure: true
 
+  otlp/uptrace:
+    endpoint: http://uptrace:14317
+    tls: { insecure: true }
+    headers: { 'uptrace-dsn': 'http://project2_secret_token@localhost:14318?grpc=14317' }
+
 processors:
   batch:
 
@@ -33,8 +38,8 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, otlp]
+      exporters: [debug, otlp, otlp/uptrace]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug, prometheus]
+      exporters: [debug, prometheus, otlp/uptrace]
