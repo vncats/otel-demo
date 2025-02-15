@@ -9,7 +9,6 @@ import (
 	"github.com/vncats/otel-demo/internal/message"
 	"github.com/vncats/otel-demo/internal/store"
 	"github.com/vncats/otel-demo/internal/workflow"
-	"github.com/vncats/otel-demo/pkg/otel/log"
 	"github.com/vncats/otel-demo/pkg/otel/metric"
 	"github.com/vncats/otel-demo/pkg/otel/sdk"
 )
@@ -25,9 +24,6 @@ func main() {
 	defer func() {
 		_ = shutdownFn(ctx)
 	}()
-
-	// Setup log
-	log.Setup("movie_service")
 
 	// Start runtime metrics.
 	err = metric.StartRuntime()

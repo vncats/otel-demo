@@ -59,7 +59,7 @@ func main() {
 	defer cancel()
 
 	client := NewClient()
-	interval := 500 * time.Millisecond
+	interval := 2 * time.Second
 
 	var wg sync.WaitGroup
 	wg.Add(1)

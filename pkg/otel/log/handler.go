@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"go.opentelemetry.io/otel/baggage"
 	"log/slog"
 	"runtime"
 
@@ -19,9 +20,16 @@ func WithDebugLevel(enabled bool) Option {
 	}
 }
 
+func WithBaggageFilter(filter func(baggage.Member) bool) Option {
+	return func(h *Handler) {
+		h.filter = filter
+	}
+}
+
 type Handler struct {
-	next  slog.Handler
-	level slog.Level
+	next   slog.Handler
+	level  slog.Level
+	filter func(member baggage.Member) bool
 }
 
 var _ slog.Handler = &Handler{} // Assert conformance with interface
@@ -60,5 +68,20 @@ func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
 		r.PC = pc
 	}
 
+	if h.filter != nil {
+		r.AddAttrs(h.baggageAttributes(ctx)...)
+	}
+
 	return h.next.Handle(ctx, r)
+}
+
+func (h *Handler) baggageAttributes(ctx context.Context) []slog.Attr {
+	var attrs []slog.Attr
+	for _, member := range baggage.FromContext(ctx).Members() {
+		if h.filter(member) {
+			attrs = append(attrs, slog.String(member.Key(), member.Value()))
+		}
+	}
+
+	return attrs
 }

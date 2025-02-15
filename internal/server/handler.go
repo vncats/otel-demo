@@ -72,6 +72,8 @@ func (h *Handler) GetMovies(ctx *RequestContext) {
 		Movies: movies,
 	}
 
+	log.Info(ctx.Context(), "get movies successfully")
+
 	ctx.SendSuccess("get movies successfully", resp)
 }
 

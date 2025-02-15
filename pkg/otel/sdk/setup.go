@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"github.com/vncats/otel-demo/pkg/otel/log"
 	"os"
 
 	config "go.opentelemetry.io/contrib/config/v0.3.0"
@@ -87,7 +88,8 @@ func Setup(ctx context.Context, cfg OTelSDKConfig) (func(context.Context) error,
 	loggerProvider := sdk.LoggerProvider()
 
 	// Register baggage processor
-	if filter := baggageFilter(cfg.ExtraConfig.Baggage); filter != nil {
+	filter := baggageFilter(cfg.ExtraConfig.Baggage)
+	if filter != nil {
 		if tp, ok := traceProvider.(*trace.TracerProvider); ok {
 			tp.RegisterSpanProcessor(baggagecopy.NewSpanProcessor(filter))
 		}
@@ -98,6 +100,9 @@ func Setup(ctx context.Context, cfg OTelSDKConfig) (func(context.Context) error,
 	otel.SetMeterProvider(meterProvider)
 	global.SetLoggerProvider(loggerProvider)
 	otel.SetTextMapPropagator(defaultPropagator())
+
+	// Set up logger
+	log.Setup("slog", log.WithBaggageFilter(filter))
 
 	return sdk.Shutdown, nil
 }
@@ -123,7 +128,7 @@ func defaultPropagator() propagation.TextMapPropagator {
 }
 
 // baggageFilter returns a filter function for baggage members
-func baggageFilter(keys []string) baggagecopy.Filter {
+func baggageFilter(keys []string) func(baggage.Member) bool {
 	if len(keys) == 0 {
 		return nil
 	}

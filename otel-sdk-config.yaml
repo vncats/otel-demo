@@ -34,10 +34,7 @@ logger_provider:
   processors:
     - batch:
         exporter:
-          # console: {}
-          otlp:
-            protocol: grpc
-            endpoint: http://localhost:4317
+          console: {}
         export_timeout: 1000
 
 extra_config:
