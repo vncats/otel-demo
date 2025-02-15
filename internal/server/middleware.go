@@ -41,16 +41,6 @@ func WithAttributes(h http.Handler, attrs ...attribute.KeyValue) http.Handler {
 	})
 }
 
-func PopulateBaggage(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		bag := baggage.FromContext(r.Context())
-		bag = setMember(bag, "user_id", getUserID(r))
-		bag = setMember(bag, "request_id", getRequestID(r))
-
-		next.ServeHTTP(w, r.WithContext(baggage.ContextWithBaggage(r.Context(), bag)))
-	})
-}
-
 func TrackUserAction(h IHandler, action string) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -74,18 +64,4 @@ func TrackUserAction(h IHandler, action string) Middleware {
 			next.ServeHTTP(w, r)
 		})
 	}
-}
-
-func setMember(bag baggage.Baggage, key, value string) baggage.Baggage {
-	m, err := baggage.NewMember(key, value)
-	if err != nil {
-		return bag
-	}
-
-	b, err := bag.SetMember(m)
-	if err != nil {
-		return bag
-	}
-
-	return b
 }

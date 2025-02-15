@@ -23,14 +23,12 @@ func NewServer(h IHandler) *Server {
 	mux.Handle("/movies", newRouteHandler(
 		h.GetMovies,
 		TraceRequest("GET", "/movies"),
-		PopulateBaggage,
 		TrackUserAction(h, "get_movies"),
 	))
 
 	mux.Handle("/movies/{id}/ratings/{score}", newRouteHandler(
 		h.RateMovie,
 		TraceRequest("GET", "/movies/{id}/ratings/{score}"),
-		PopulateBaggage,
 		TrackUserAction(h, "rate_movie"),
 	))
 

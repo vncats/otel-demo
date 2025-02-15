@@ -67,10 +67,12 @@ func main() {
 		defer wg.Done()
 		intervalCall(ctx, interval, func() {
 			userID, userAgent := randomSession()
+			requestID := uuid.NewString()
 			client.Get(ctx, "http://localhost:8080/movies", map[string]string{
 				"user-agent":   userAgent,
+				"baggage":      fmt.Sprintf("user_id=%s,request_id=%s", userID, requestID),
 				"x-user-id":    userID,
-				"x-request-id": uuid.NewString(),
+				"x-request-id": requestID,
 			})
 			fmt.Printf("== %s (%s): gets all movies\n", userID, userAgent)
 		})
@@ -82,10 +84,12 @@ func main() {
 		intervalCall(ctx, interval, func() {
 			url := fmt.Sprintf("http://localhost:8080/movies/%d/ratings/%d", 1+rand.Intn(3), 1+rand.Intn(5))
 			userID, userAgent := randomSession()
+			requestID := uuid.NewString()
 			client.Get(ctx, url, map[string]string{
 				"user-agent":   userAgent,
+				"baggage":      fmt.Sprintf("user_id=%s,request_id=%s", userID, requestID),
 				"x-user-id":    userID,
-				"x-request-id": uuid.NewString(),
+				"x-request-id": requestID,
 			})
 			fmt.Printf("== %s (%s): rates a movie\n", userID, userAgent)
 		})
