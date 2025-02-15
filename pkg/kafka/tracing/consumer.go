@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"sync"
 	"time"
 
 	"go.opentelemetry.io/otel/metric"
@@ -35,7 +34,6 @@ type Consumer struct {
 	durationMeasure metric.Float64Histogram
 
 	endPrevSpanFn func()
-	lock          sync.Mutex
 }
 
 func (c *Consumer) Poll(timeoutMs int) (event kafka.Event) {
@@ -57,9 +55,6 @@ func (c *Consumer) Close() error {
 }
 
 func (c *Consumer) startSpan(msg *kafka.Message) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
 	carrier := NewMessageCarrier(msg)
 	parentCtx := propagator.Extract(context.Background(), carrier)
 
@@ -95,16 +90,12 @@ func (c *Consumer) startSpan(msg *kafka.Message) {
 	propagator.Inject(spanCtx, carrier)
 
 	c.endPrevSpanFn = func() {
-		defer span.End()
-		elapsedTime := float64(time.Since(startTime)) / float64(time.Millisecond)
-		c.durationMeasure.Record(spanCtx, elapsedTime, metric.WithAttributes(attrs...))
+		c.recordMetrics(spanCtx, startTime, metric.WithAttributes(attrs...))
+		span.End()
 	}
 }
 
 func (c *Consumer) endPrevSpan() {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
 	if c.endPrevSpanFn != nil {
 		c.endPrevSpanFn()
 		c.endPrevSpanFn = nil
@@ -124,4 +115,9 @@ func (c *Consumer) createMetrics() error {
 	}
 
 	return nil
+}
+
+func (c *Consumer) recordMetrics(ctx context.Context, startTime time.Time, opts ...metric.RecordOption) {
+	elapsedTime := float64(time.Since(startTime)) / float64(time.Millisecond)
+	c.durationMeasure.Record(ctx, elapsedTime, opts...)
 }
