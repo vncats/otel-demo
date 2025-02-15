@@ -76,7 +76,7 @@ func NewProducer(opts ProducerOptions) (*Producer, error) {
 	var client ProducerClient = c
 	if opts.EnableTracing {
 		client = tracing.WrapProducer(c, tracing.WrapOptions{
-			SpanAttrs: tracing.GetKafkaAttrs(kkConfig),
+			Attributes: tracing.GetKafkaAttrs(kkConfig),
 		})
 	}
 

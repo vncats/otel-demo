@@ -75,7 +75,7 @@ func NewConsumer(opts ConsumerOptions) (*Consumer, error) {
 	var client ConsumerClient = c
 	if opts.EnableTracing {
 		client, err = tracing.WrapConsumer(c, tracing.WrapOptions{
-			SpanAttrs: tracing.GetKafkaAttrs(kkConfig),
+			Attributes: tracing.GetKafkaAttrs(kkConfig),
 		})
 		if err != nil {
 			return nil, err
