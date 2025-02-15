@@ -16,7 +16,7 @@ var (
 )
 
 type WrapOptions struct {
-	SpanAttrs []attribute.KeyValue
+	Attributes []attribute.KeyValue
 }
 
 func GetKafkaAttrs(cm kafka.ConfigMap) []attribute.KeyValue {

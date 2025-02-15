@@ -14,14 +14,14 @@ import (
 // WrapProducer wraps a kafka.Producer so that any produced messages are traced.
 func WrapProducer(p *kafka.Producer, opts WrapOptions) *Producer {
 	return &Producer{
-		Producer:  p,
-		spanAttrs: opts.SpanAttrs,
+		Producer:   p,
+		attributes: opts.Attributes,
 	}
 }
 
 type Producer struct {
 	*kafka.Producer
-	spanAttrs []attribute.KeyValue
+	attributes []attribute.KeyValue
 }
 
 // Produce calls the underlying Producer.Produce and traces the request.
@@ -61,14 +61,14 @@ func (p *Producer) startSpan(msg *kafka.Message) trace.Span {
 	carrier := NewMessageCarrier(msg)
 	parentCtx := propagator.Extract(context.Background(), carrier)
 
-	attrs := []attribute.KeyValue{
+	attrs := append(
+		p.attributes,
 		semconv.MessagingOperationTypePublish,
 		semconv.MessagingSystemKafka,
 		semconv.MessagingDestinationName(*msg.TopicPartition.Topic),
 		semconv.MessagingKafkaMessageKey(string(msg.Key)),
 		semconv.MessagingMessageBodySize(getMsgSize(msg)),
-	}
-	attrs = append(attrs, p.spanAttrs...)
+	)
 
 	spanCtx, span := tracer.Start(
 		parentCtx,

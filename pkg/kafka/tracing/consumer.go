@@ -3,6 +3,7 @@ package tracing
 import (
 	"context"
 	"fmt"
+	"github.com/vncats/otel-demo/pkg/otel/sdk"
 	"strconv"
 	"time"
 
@@ -17,8 +18,8 @@ import (
 // WrapConsumer wraps a kafka.Consumer so that any consumed events are traced.
 func WrapConsumer(c *kafka.Consumer, opts WrapOptions) (*Consumer, error) {
 	consumer := &Consumer{
-		Consumer:  c,
-		spanAttrs: opts.SpanAttrs,
+		Consumer:   c,
+		attributes: opts.Attributes,
 	}
 	if err := consumer.createMetrics(); err != nil {
 		return nil, err
@@ -30,8 +31,8 @@ func WrapConsumer(c *kafka.Consumer, opts WrapOptions) (*Consumer, error) {
 type Consumer struct {
 	*kafka.Consumer
 
-	spanAttrs       []attribute.KeyValue
-	durationMeasure metric.Float64Histogram
+	attributes        []attribute.KeyValue
+	durationHistogram metric.Float64Histogram
 
 	endPrevSpanFn func()
 }
@@ -61,7 +62,7 @@ func (c *Consumer) startSpan(msg *kafka.Message) {
 	operationName := fmt.Sprintf("receive %s", *msg.TopicPartition.Topic)
 
 	attrs := append(
-		c.spanAttrs,
+		c.attributes,
 		semconv.MessagingOperationName(operationName),
 		semconv.MessagingOperationTypeReceive,
 		semconv.MessagingSystemKafka,
@@ -105,10 +106,11 @@ func (c *Consumer) endPrevSpan() {
 func (c *Consumer) createMetrics() error {
 	var err error
 
-	c.durationMeasure, err = meter.Float64Histogram(
+	c.durationHistogram, err = meter.Float64Histogram(
 		semconv.MessagingProcessDurationName,
-		metric.WithUnit("ms"),
+		metric.WithUnit(semconv.MessagingProcessDurationUnit),
 		metric.WithDescription(semconv.MessagingProcessDurationDescription),
+		metric.WithExplicitBucketBoundaries(sdk.HistogramBoundariesSeconds()...),
 	)
 	if err != nil {
 		return err
@@ -118,6 +120,5 @@ func (c *Consumer) createMetrics() error {
 }
 
 func (c *Consumer) recordMetrics(ctx context.Context, startTime time.Time, opts ...metric.RecordOption) {
-	elapsedTime := float64(time.Since(startTime)) / float64(time.Millisecond)
-	c.durationMeasure.Record(ctx, elapsedTime, opts...)
+	c.durationHistogram.Record(ctx, time.Since(startTime).Seconds(), opts...)
 }
