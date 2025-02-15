@@ -7,7 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
+	"gorm.io/plugin/opentelemetry/tracing"
+
 	"github.com/vncats/otel-demo/pkg/prim"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -79,7 +80,7 @@ func NewStore(dbURI string) (*Store, error) {
 		return nil, err
 	}
 
-	if err = db.Use(otelgorm.NewPlugin(otelgorm.WithoutQueryVariables())); err != nil {
+	if err = db.Use(tracing.NewPlugin(tracing.WithoutQueryVariables())); err != nil {
 		return nil, err
 	}
 

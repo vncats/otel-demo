@@ -1,12 +1,13 @@
 package workflow
 
 import (
+	"log/slog"
+	"os"
+
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/contrib/opentelemetry"
 	"go.temporal.io/sdk/interceptor"
 	tlog "go.temporal.io/sdk/log"
-	"log/slog"
-	"os"
 )
 
 // NewClient create a new temporal client
@@ -16,9 +17,7 @@ func NewClient() (client.Client, error) {
 		return nil, err
 	}
 
-	metricHandler := opentelemetry.NewMetricsHandler(
-		opentelemetry.MetricsHandlerOptions{},
-	)
+	metricHandler := opentelemetry.NewMetricsHandler(opentelemetry.MetricsHandlerOptions{})
 
 	logger := tlog.NewStructuredLogger(
 		slog.New(

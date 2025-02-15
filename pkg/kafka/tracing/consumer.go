@@ -3,9 +3,10 @@ package tracing
 import (
 	"context"
 	"fmt"
-	"github.com/vncats/otel-demo/pkg/otel/sdk"
 	"strconv"
 	"time"
+
+	"github.com/vncats/otel-demo/pkg/otel/sdk"
 
 	"go.opentelemetry.io/otel/metric"
 
