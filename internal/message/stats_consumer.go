@@ -21,7 +21,7 @@ func NewStatsConsumer(st store.IStore) (*StatsConsumer, error) {
 	consumer, err := kafka.NewConsumer(kafka.ConsumerOptions{
 		Brokers:       "localhost:9092",
 		Group:         "movie_stats_consumer_group",
-		Topics:        []string{"movie.rating-created"},
+		Topics:        []string{"private.movie.rating.created"},
 		Offset:        kafka.OffsetEarliest,
 		EnableTracing: true,
 		MessageHandler: kafka.HandleWithRetry(handler.handleMessage, retry.Config{

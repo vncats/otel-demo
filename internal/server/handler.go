@@ -100,7 +100,7 @@ func (h *Handler) RateMovie(ctx *RequestContext) {
 		return
 	}
 
-	_, err = h.producer.Produce(ctx.Context(), "movie.rating-created", strconv.Itoa(req.ID), rating)
+	_, err = h.producer.Produce(ctx.Context(), "private.movie.rating.created", strconv.Itoa(req.ID), rating)
 	if err != nil {
 		ctx.SendError()
 		return
