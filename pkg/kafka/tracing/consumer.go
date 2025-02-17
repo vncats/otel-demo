@@ -83,11 +83,9 @@ func (c *Consumer) startSpan(msg *kafka.Message) {
 	spanCtx, span := tracer.Start(
 		parentCtx,
 		operationName,
-		trace.WithNewRoot(),
 		trace.WithTimestamp(startTime),
 		trace.WithAttributes(spanAttrs...),
 		trace.WithSpanKind(trace.SpanKindConsumer),
-		trace.WithLinks(trace.Link{SpanContext: trace.SpanContextFromContext(parentCtx)}),
 	)
 	propagator.Inject(spanCtx, carrier)
 

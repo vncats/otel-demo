@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.opentelemetry.io/otel/propagation"
+
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/vncats/otel-demo/pkg/prim"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/baggage"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -44,22 +45,18 @@ func WithAttributes(h http.Handler, attrs ...attribute.KeyValue) http.Handler {
 func TrackUserAction(h IHandler, action string) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			payload := prim.Map{
-				"user_id":    getUserID(r),
-				"request_id": getRequestID(r),
-				"user_agent": r.Header.Get("User-Agent"),
-				"action":     action,
-			}
 			go func() {
-				spanCtx, span := otel.Tracer("middleware").Start(
-					baggage.ContextWithBaggage(context.Background(), baggage.FromContext(r.Context())),
-					"track_user_action",
-					trace.WithLinks(trace.Link{
-						SpanContext: trace.SpanContextFromContext(r.Context()),
-					}),
-				)
-				defer span.End()
-				h.TrackUserAction(spanCtx, payload)
+				// clone context
+				carrier := propagation.MapCarrier{}
+				otel.GetTextMapPropagator().Inject(r.Context(), carrier)
+				newCtx := otel.GetTextMapPropagator().Extract(context.Background(), carrier)
+
+				h.TrackUserAction(newCtx, prim.Map{
+					"user_id":    getUserID(r),
+					"request_id": getRequestID(r),
+					"user_agent": r.Header.Get("User-Agent"),
+					"action":     action,
+				})
 			}()
 			next.ServeHTTP(w, r)
 		})

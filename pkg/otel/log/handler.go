@@ -2,9 +2,10 @@ package log
 
 import (
 	"context"
-	"go.opentelemetry.io/otel/baggage"
 	"log/slog"
 	"runtime"
+
+	"go.opentelemetry.io/otel/baggage"
 
 	slogctx "github.com/veqryn/slog-context"
 	"go.opentelemetry.io/contrib/bridges/otelslog"

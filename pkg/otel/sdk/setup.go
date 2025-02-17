@@ -2,8 +2,9 @@ package sdk
 
 import (
 	"context"
-	"github.com/vncats/otel-demo/pkg/otel/log"
 	"os"
+
+	"github.com/vncats/otel-demo/pkg/otel/log"
 
 	config "go.opentelemetry.io/contrib/config/v0.3.0"
 	"go.opentelemetry.io/contrib/processors/baggagecopy"
